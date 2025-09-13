@@ -1,0 +1,6 @@
+- name: cambiar zona horaria en servidores
+  hosts: servers
+  become: true
+  tasks:
+    - name: Establecer zona horaria a america
+      ansible.builtin.command: timedatectl set-timezone America/Bogota

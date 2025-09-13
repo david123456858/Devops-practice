@@ -1,0 +1,63 @@
+- name: conguracion de entorno
+  hosts: servers
+  become: true
+
+  tasks:
+
+    - name: verificar si esta python
+      ansible.builtin.package:
+        name: python3
+        state: present
+
+
+    - name: instalar el docker vale
+      ansible.builtin.package:
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Agregar clave GPG oficial de Docker
+      ansible.builtin.command: >
+        curl -fsSL https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+        | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      args:
+        create: /usr/share/keyrings/docker-archive-keyring.gpg
+
+    - name: agregar repositorio docker
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+        state: present
+
+
+    - name: Decargar plugin y demas
+      ansible.builtin.package: 
+        name: 
+          - docker-ce 
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present 
+
+    - name: agregarlo al grupo
+      user:
+        name: sysadmin
+        groups: docker
+        append: yes
+      become: yes
+
+    - name: instalar git 
+      ansible.builtin.package:
+        name:
+          - git
+        state: present
+
+    - name: habilitar y arrancar docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+            
