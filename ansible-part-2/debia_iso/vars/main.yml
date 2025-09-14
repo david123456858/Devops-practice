@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+src_iso: "/vm/iso/debian-13.0.0-amd64-netinst.iso"
+mnt_dir: "/vm/iso/debian-iso"
+wrk_dir: "/vm/iso/debian-iso-work"
+
+# vars file for debia_iso

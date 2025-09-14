@@ -1,0 +1,6 @@
+---
+- name: tasks of the install
+  hosts: local
+  become: true
+  vars:
+    - 
