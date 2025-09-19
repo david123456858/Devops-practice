@@ -1,0 +1,21 @@
+---
+- name: Instalar y configurar nginx
+  hosts: host
+  become: yes
+  tasks:
+
+  - name: instalar el paquete de nginx
+    apt:
+      name: nginx
+      state: present
+
+  - name: Copiar nuestra pagina
+    copy:
+      src: ./files/index.html
+      dest: /var/www/html/index.html
+
+  - name: ASEGURAR
+    service:
+      name: nginx
+      state: started
+      enabled: yes   
