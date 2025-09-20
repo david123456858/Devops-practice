@@ -5,9 +5,16 @@
   tasks:
 
   - name: instalar el paquete de nginx
-    apt:
+    apt: # modulo de ansible para descargar por apt
       name: nginx
       state: present
+
+  - name: Copiar configuracion
+    copy: # Modulo integrado de ansible para copiar
+      src: ./files/nginx-config
+      dest: /etc/nginx/sites-available/default
+    notify: # OJITO ESTA ES LA QUE LE AVISA AL HANDLER PA QUE ESTE PENDIENTE
+      - Reiniciar Ngnix
 
   - name: Copiar nuestra pagina
     copy:
@@ -15,7 +22,13 @@
       dest: /var/www/html/index.html
 
   - name: ASEGURAR
-    service:
+    service: # modulo que controla los servicio de los host
       name: nginx
       state: started
       enabled: yes   
+
+  handlers:
+    - name: Reiniciar Ngnix
+      service:
+        name: nginx
+        state: restarted
