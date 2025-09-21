@@ -1,4 +1,4 @@
-http_port: 80
+http_port: 8000
 web_server_package: nginx
 web_server_service: nginx
 document_root: /var/www/html

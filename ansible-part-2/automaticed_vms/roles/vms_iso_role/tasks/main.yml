@@ -1,0 +1,48 @@
+#SPDX-License-Identifier: MIT-0
+---
+- name: Actualizar paquetes
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Instalar paquetes requeridos
+  apt:
+    state: latest
+    name:
+      - xorriso
+      - isolinux
+      - syslinux
+      - rsync
+      - whois
+
+- name: Crear los directorios 
+  file:
+    path: "{{ path_iso }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ MNT_DIR }}"
+    - "{{ WRK_DIR }}"
+
+- name: Copiar la iso en la ruta iso
+  copy:
+    src: "{{path_iso_download}}"
+    dest: "{{ SRC_ISO }}"
+    mode: '0644'
+
+- name: Montar la iso
+  mount:
+    path: "{{ MNT_DIR }}"
+    src: "{{ SRC_ISO }}"
+    fstype: iso9660
+    opts: loop
+    state: mounted
+
+- name: Copiar contenido del ISO
+  synchronize:
+    src: "{{ MNT_DIR }}/"
+    dest: "{{ WRK_DIR }}/"
+    delete: yes
+    archive: yes
+
+# tasks file for vms_iso_role
