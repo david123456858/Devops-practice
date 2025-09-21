@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT-0
 ---
-
-
+user: juan-david
+path_ssh_user: /home/juan-david/.ssh/autorized_keys
 # vars file for vms_iso_role

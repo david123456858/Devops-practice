@@ -1,1 +1,11 @@
 ---
+- name: Creando proseed para la instalacion
+  template:
+    src: preseed.cfg.j2
+    dest: "{{WRK_DIR}}/preseed.cfg"
+  become: yes
+
+- name: llevando mis ssh al achivo pressed
+  command:
+    cmd: "cp {{path_ssh_user}} {{WRK_DIR}}"
+  become: yes
