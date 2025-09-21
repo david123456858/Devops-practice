@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+  - name: Reiniciar Ngnix
+    service:
+      name: "{{web_server_service}}"
+      state: restarted
+# handlers file for nginx-role
