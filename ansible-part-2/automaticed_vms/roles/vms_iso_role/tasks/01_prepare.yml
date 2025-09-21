@@ -1,0 +1,17 @@
+---
+- name: Actualizar paquetes
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+
+- name: Instalar paquetes requeridos
+  apt:
+    state: latest
+    name:
+      - xorriso
+      - isolinux
+      - syslinux
+      - rsync
+      - whois
+  become: yes

@@ -1,0 +1,6 @@
+---
+- name: Raiz de los playbooks
+  hosts: host
+  become: yes
+  roles:
+    - vms_iso_role

@@ -1,22 +1,4 @@
-#SPDX-License-Identifier: MIT-0
 ---
-- name: Actualizar paquetes
-  apt:
-    update_cache: yes
-    cache_valid_time: 3600
-  become: yes
-
-- name: Instalar paquetes requeridos
-  apt:
-    state: latest
-    name:
-      - xorriso
-      - isolinux
-      - syslinux
-      - rsync
-      - whois
-  become: yes
-
 - name: Crear los directorios 
   file:
     path: "{{ path_iso }}"
@@ -47,5 +29,3 @@
     creates: "{{ WRK_DIR }}/dists"  # ¡Condición de idempotencia!
   become: yes
   changed_when: false
-
-# tasks file for vms_iso_role
