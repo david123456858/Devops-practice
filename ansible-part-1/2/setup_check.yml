@@ -1,8 +1,6 @@
 ---
 - name: Install packages
-  hosts: SWYW
-  vars:  
-    ARGOCD_URL: argocd.dev.singularit.co
+  hosts: servers
 
   tasks:
 
