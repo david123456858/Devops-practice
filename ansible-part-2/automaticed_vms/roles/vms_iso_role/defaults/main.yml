@@ -6,7 +6,9 @@ path_iso: ~/Documents
 
 
 SRC_ISO: /vm/iso/debian-13.0.0-amd64-netinst.iso
+OUT_ISO: /vm/iso/debian-13.0.0-amd64-netinst-custom.iso
 MNT_DIR: /vm/iso/debian-iso
 WRK_DIR: /vm/iso/debian-iso-work
+NAME_CUSTOM: DEBIAN_CUSTOM
 
 # defaults file for vms_iso_role

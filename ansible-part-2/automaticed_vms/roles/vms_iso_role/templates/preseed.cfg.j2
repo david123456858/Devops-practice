@@ -190,7 +190,7 @@ d-i preseed/late_command string \
   chmod 700 /target/home/sysadmin/.ssh ; \
   chmod 600 /target/home/sysadmin/.ssh/authorized_keys || true ; \
   echo 'sysadmin ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/sysadmin ; \
-  chmod 0440 /target/etc/sudoers.d/sysadmin ;
+  chmod 0440 /target/etc/sudoers.d/  ;
 
 
   

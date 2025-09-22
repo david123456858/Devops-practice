@@ -1,0 +1,13 @@
+---
+- name: build iso
+  shell: |
+    xorriso -as mkisofs \
+    -o OUT_ISO \
+    -r -iso-level 3 -V {{NAME_CUSTOM}} \
+    -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -b isolinux/isolinux.bin -c isolinux/boot.cat \
+    -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot \
+    -isohybrid-gpt-basdat -isohybrid-apm-hfsplus \
+    -input-charset utf-8 \
+    /vm/iso/debian-iso-work
+  become: yes
