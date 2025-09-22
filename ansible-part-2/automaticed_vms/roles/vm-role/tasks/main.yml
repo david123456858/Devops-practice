@@ -1,3 +1,27 @@
 #SPDX-License-Identifier: MIT-0
 ---
+- name: Haciendo las vms
+  pause:
+    prompt: "¿Cuantas maquinas virutales quieres? (1 master) (N workers)"
+    seconds: "10"
+  register: vm_count_promtp
+
+- name: Detectar y buscar las interfaz bridge autimatcamente
+  set_fact:
+    bridge_interface: "{{ ansible_default_ipv4.interface }}"
+
+- name: Creacion de configuracion dinamica de vms
+  set_fact:
+    vm_config: |
+      [
+            {"name": "k8s-master", "role": "master", "memory": 4096, "cpus": 2, "disk_size": 20000}
+            {% for i in range(vm_count_prompt.user_input | int) %}
+            ,{"name": "k8s-worker-{{ '%02d' % (i + 1) }}", "role": "worker", "memory": 2048, "cpus": 2, "disk_size": 20000}
+            {% endfor %}
+          ]
+
+- name: Mostrar resumen de la configuración
+  debug:
+    msg: "Se crearán {{ vm_configs | length }} VMs: {{ vm_configs | map(attribute='name') | list }}"  
+
 # tasks file for vm-role

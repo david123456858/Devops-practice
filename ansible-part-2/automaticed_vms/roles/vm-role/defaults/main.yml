@@ -1,3 +1,5 @@
 #SPDX-License-Identifier: MIT-0
 ---
+OUT_ISO: /vm/iso/debian-13.0.0-amd64-netinst-custom.iso
+
 # defaults file for vm-role
