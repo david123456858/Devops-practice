@@ -2,4 +2,5 @@
 ---
 user: juan-david
 path_ssh_user: /home/juan-david/.ssh/authorized_keys
+url_iso: "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/{{ ISO_NAME }}"
 # vars file for vms_iso_role

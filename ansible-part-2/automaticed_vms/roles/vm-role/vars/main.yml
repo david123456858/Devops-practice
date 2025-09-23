@@ -1,3 +1,18 @@
 #SPDX-License-Identifier: MIT-0
 ---
+vms_list:
+  - name: "k8s-master"
+    memory: 1240
+    cpus: 1
+    mac_address: "0800279E473A"
+    interface: "enp3s0"
+    disk_size: 10000
+  
+  # - name: "k8s-worker"
+  #   memory: 1240
+  #   cpus: 1
+  #   mac_address: "0800279E473B"
+  #   interface: "enp3s0"
+  #   disk_size: 10000
+  
 # vars file for vm-role

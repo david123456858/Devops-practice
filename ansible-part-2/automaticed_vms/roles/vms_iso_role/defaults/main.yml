@@ -5,7 +5,7 @@ path_iso_download: "~/Downloads/{{ ISO_NAME }}"
 path_iso: ~/Documents
 
 
-SRC_ISO: /vm/iso/debian-13.0.0-amd64-netinst.iso
+SRC_ISO: "/vm/iso/{{ ISO_NAME }}"
 OUT_ISO: /vm/iso/debian-13.0.0-amd64-netinst-custom.iso
 MNT_DIR: /vm/iso/debian-iso
 WRK_DIR: /vm/iso/debian-iso-work

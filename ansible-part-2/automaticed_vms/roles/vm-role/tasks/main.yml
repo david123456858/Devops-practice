@@ -1,27 +1,51 @@
 #SPDX-License-Identifier: MIT-0
 ---
-- name: Haciendo las vms
-  pause:
-    prompt: "¿Cuantas maquinas virutales quieres? (1 master) (N workers)"
-    seconds: "10"
-  register: vm_count_promtp
-
-- name: Detectar y buscar las interfaz bridge autimatcamente
-  set_fact:
-    bridge_interface: "{{ ansible_default_ipv4.interface }}"
-
-- name: Creacion de configuracion dinamica de vms
-  set_fact:
-    vm_config: |
-      [
-            {"name": "k8s-master", "role": "master", "memory": 4096, "cpus": 2, "disk_size": 20000}
-            {% for i in range(vm_count_prompt.user_input | int) %}
-            ,{"name": "k8s-worker-{{ '%02d' % (i + 1) }}", "role": "worker", "memory": 2048, "cpus": 2, "disk_size": 20000}
-            {% endfor %}
-          ]
-
-- name: Mostrar resumen de la configuración
+- name: Mostrar la lista de mv para activar
   debug:
-    msg: "Se crearán {{ vm_configs | length }} VMs: {{ vm_configs | map(attribute='name') | list }}"  
+    msg: "Se creara {{ item.name }} "
+  loop: "{{ vms_list }}"
+
+- name: Fabricante del procesador
+  debug:
+    msg: "Este es el procesador {{ansible_processor[1]}} y este {{ansible_processor[2]}}" 
+
+- name: Detectar el fabriante
+  set_fact:
+    processor: >
+      {% set processor_name = (ansible_processor[1] ~ ansible_processor[2]) | lower | default('') %}
+          {% if 'intel' in processor_name %}
+            intel
+          {% elif 'amd' in processor_name or 'ryzen' in processor_name %}
+            amd
+          {% else %}
+            unknown
+          {% endif %}
+
+- name: Correr de manera correcta vm
+  shell: |
+    {% if processor == 'intel' %}
+    modprobe -r kvm_intel && modprobe kvm_intel
+    {% elif processor == 'amd' %}
+    modprobe -r kvm_amd && modprobe kvm_amd
+    {% else %}
+    echo "Unknown processor type, skipping KVM module reload"
+    {% endif %}
+  become: yes
+
+- name: Creando las maquinas virutales
+  shell: |
+    VBoxManage createvm --name "{{ item.name }}" --ostype Debian_64 --basefolder /vm --register
+    VBoxManage modifyvm "{{ item.name }}" --firmware bios --boot1 dvd --boot2 disk --boot3 none --boot4 none
+    VBoxManage modifyvm "{{ item.name }}" --memory {{ item.memory }} --cpus {{item.cpus}} --audio-driver none --graphicscontroller vmsvga --vram 16
+    VBoxManage createhd --filename /vm/"{{ item.name }}"/"{{ item.name }}".vdi --size {{ item.disk_size }} --variant Standard
+    VBoxManage storagectl "{{ item.name }}" --name "SATA Controller" --add sata --controller IntelAhci
+    VBoxManage storageattach "{{ item.name }}" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium /vm/{{ item.name }}/{{ item.name }}.vdi --nonrotational on --hotpluggable on
+    VBoxManage modifyvm "{{ item.name }}" --macaddress1 {{ item.mac_address }}
+    VBoxManage setextradata "{{ item.name }}" "VBoxInternal/Devices/ahci/0/Config/Port0/IsSSD" 1
+    VBoxManage modifyvm "{{ item.name }}" --nic1 bridged --bridgeadapter1 {{ item.interface }}
+    VBoxManage storagectl "{{ item.name }}" --name "IDE Controller" --add ide
+    VBoxManage storageattach "{{ item.name }}" --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "{{ OUT_ISO }}"
+    VBoxManage startvm {{ item.name }} --type headless 
+  loop: "{{ vms_list }}"
 
 # tasks file for vm-role
