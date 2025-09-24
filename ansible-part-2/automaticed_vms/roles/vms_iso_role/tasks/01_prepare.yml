@@ -22,7 +22,7 @@
   ignore_errors: yes
   changed_when: false
 
-- name: Instalar si no esta
+- name: Instalar Virutal si no esta
   apt:
     name: virtualbox
     state: present
@@ -31,15 +31,15 @@
     - vbox_check.rc != 0
   become: yes
 
-- name: Instalar la ISO si no se encuentra
-  stat:
-    path: "{{path_iso_download}}"
-  register: iso_file
+# - name: Instalar la ISO si no se encuentra
+#   stat:
+#     path: "{{path_iso_download}}"
+#   register: iso_file
 
-- name: Instalar la iso
-  get_url:
-    state: present 
-    url:  "{{ url_iso }}"
-    dest: ~/Downloads
-    mode: "0644"
-  when: not iso_file.stat.exists
+# - name: Instalar la iso
+#   get_url:
+#     state: present 
+#     url:  "{{ url_iso }}"
+#     dest: ~/Downloads
+#     mode: "0644"
+#   when: not iso_file.stat.exists

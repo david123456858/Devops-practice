@@ -1,51 +1,70 @@
 #SPDX-License-Identifier: MIT-0
 ---
-- name: Mostrar la lista de mv para activar
-  debug:
-    msg: "Se creara {{ item.name }} "
-  loop: "{{ vms_list }}"
+# - name: Mostrar la lista de mv para activar
+#   debug:
+#     msg: "Se creara {{ item.name }} "
+#   loop: "{{ vms_list }}"
 
-- name: Fabricante del procesador
-  debug:
-    msg: "Este es el procesador {{ansible_processor[1]}} y este {{ansible_processor[2]}}" 
+# - name: Fabricante del procesador
+#   debug:
+#     msg: "Este es el procesador {{ansible_processor[1]}} y este {{ansible_processor[2]}}" 
 
-- name: Detectar el fabriante
-  set_fact:
-    processor: >
-      {% set processor_name = (ansible_processor[1] ~ ansible_processor[2]) | lower | default('') %}
-          {% if 'intel' in processor_name %}
-            intel
-          {% elif 'amd' in processor_name or 'ryzen' in processor_name %}
-            amd
-          {% else %}
-            unknown
-          {% endif %}
+# - name: Detectar el fabriante
+#   set_fact:
+#     processor: >
+#       {% set processor_name = (ansible_processor[1] ~ ansible_processor[2]) | lower | default('') %}
+#           {% if 'intel' in processor_name %}
+#             intel
+#           {% elif 'amd' in processor_name or 'ryzen' in processor_name %}
+#             amd
+#           {% else %}
+#             unknown
+#           {% endif %}
 
-- name: Correr de manera correcta vm
+# - name: Correr de manera correcta vm
+#   shell: |
+#     {% if processor == 'intel' %}
+#     modprobe -r kvm_intel && modprobe kvm_intel
+#     {% elif processor == 'amd' %}
+#     modprobe -r kvm_amd && modprobe kvm_amd
+#     {% else %}
+#     echo "Unknown processor type, skipping KVM module reload"
+#     {% endif %}
+#   become: yes
+
+
+# - name: Creando las maquinas virtuales
+#   shell: |
+#     VBoxManage createvm --name "{{ item.name }}" --ostype Debian_64 --basefolder /vm --register
+#     VBoxManage modifyvm "{{ item.name }}" --firmware bios --boot1 dvd --boot2 disk --boot3 none --boot4 none
+#     VBoxManage modifyvm "{{ item.name }}" --memory {{ item.memory }} --cpus {{ item.cpus }} --audio-driver none --graphicscontroller vmsvga --vram 16
+#     VBoxManage createhd --filename /vm/"{{ item.name }}"/"{{ item.name }}".vdi --size {{ item.disk_size }} --variant Standard
+#     VBoxManage storagectl "{{ item.name }}" --name "SATA Controller" --add sata --controller IntelAhci
+#     VBoxManage storageattach "{{ item.name }}" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium /vm/{{ item.name }}/{{ item.name }}.vdi --nonrotational on --hotpluggable on
+#     VBoxManage modifyvm "{{ item.name }}" --macaddress1 {{ item.mac_address }}
+#     VBoxManage modifyvm "{{ item.name }}" --nic1 bridged --bridgeadapter1 {{ item.interface }}
+#     VBoxManage storagectl "{{ item.name }}" --name "IDE Controller" --add ide
+#     VBoxManage storageattach "{{ item.name }}" --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "{{ OUT_ISO }}"
+#     VBoxManage startvm "{{ item.name }}" --type headless
+#   loop: "{{ vms_list }}"
+
+
+- name: Verificar si la VM existe (de forma segura)
   shell: |
-    {% if processor == 'intel' %}
-    modprobe -r kvm_intel && modprobe kvm_intel
-    {% elif processor == 'amd' %}
-    modprobe -r kvm_amd && modprobe kvm_amd
-    {% else %}
-    echo "Unknown processor type, skipping KVM module reload"
-    {% endif %}
-  become: yes
-
-
-- name: Creando las maquinas virtuales
-  shell: |
-    VBoxManage createvm --name "{{ item.name }}" --ostype Debian_64 --basefolder /vm --register
-    VBoxManage modifyvm "{{ item.name }}" --firmware bios --boot1 dvd --boot2 disk --boot3 none --boot4 none
-    VBoxManage modifyvm "{{ item.name }}" --memory {{ item.memory }} --cpus {{ item.cpus }} --audio-driver none --graphicscontroller vmsvga --vram 16
-    VBoxManage createhd --filename /vm/"{{ item.name }}"/"{{ item.name }}".vdi --size {{ item.disk_size }} --variant Standard
-    VBoxManage storagectl "{{ item.name }}" --name "SATA Controller" --add sata --controller IntelAhci
-    VBoxManage storageattach "{{ item.name }}" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium /vm/{{ item.name }}/{{ item.name }}.vdi --nonrotational on --hotpluggable on
-    VBoxManage modifyvm "{{ item.name }}" --macaddress1 {{ item.mac_address }}
-    VBoxManage modifyvm "{{ item.name }}" --nic1 bridged --bridgeadapter1 {{ item.interface }}
-    VBoxManage storagectl "{{ item.name }}" --name "IDE Controller" --add ide
-    VBoxManage storageattach "{{ item.name }}" --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "{{ OUT_ISO }}"
-    VBoxManage startvm "{{ item.name }}" --type headless
+    VBoxManage list vms | grep '"{{ item.name }}"' && echo "EXISTE" || echo "NO_EXISTE"
   loop: "{{ vms_list }}"
+  register: vm_check
+  changed_when: false
+
+- name: Crear VM solo si no existe
+  shell: |
+    echo "=== CREANDO VM {{ item.item.name }} ==="
+    VBoxManage createvm --name "{{ item.item.name }}" --ostype Debian_64 --basefolder /vm --register
+    VBoxManage modifyvm "{{ item.item.name }}" --memory {{ item.item.memory }} --cpus {{ item.item.cpus }}
+    echo "✅ {{ item.item.name }} creada exitosamente"
+  loop: "{{ vm_check.results }}"
+  when: "'NO_EXISTE' in item.stdout"
+  args:
+    executable: /bin/bash
 
 # tasks file for vm-role
