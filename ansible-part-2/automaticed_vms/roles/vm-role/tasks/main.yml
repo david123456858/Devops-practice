@@ -32,20 +32,20 @@
     {% endif %}
   become: yes
 
-- name: Creando las maquinas virutales
+
+- name: Creando las maquinas virtuales
   shell: |
     VBoxManage createvm --name "{{ item.name }}" --ostype Debian_64 --basefolder /vm --register
     VBoxManage modifyvm "{{ item.name }}" --firmware bios --boot1 dvd --boot2 disk --boot3 none --boot4 none
-    VBoxManage modifyvm "{{ item.name }}" --memory {{ item.memory }} --cpus {{item.cpus}} --audio-driver none --graphicscontroller vmsvga --vram 16
+    VBoxManage modifyvm "{{ item.name }}" --memory {{ item.memory }} --cpus {{ item.cpus }} --audio-driver none --graphicscontroller vmsvga --vram 16
     VBoxManage createhd --filename /vm/"{{ item.name }}"/"{{ item.name }}".vdi --size {{ item.disk_size }} --variant Standard
     VBoxManage storagectl "{{ item.name }}" --name "SATA Controller" --add sata --controller IntelAhci
     VBoxManage storageattach "{{ item.name }}" --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium /vm/{{ item.name }}/{{ item.name }}.vdi --nonrotational on --hotpluggable on
     VBoxManage modifyvm "{{ item.name }}" --macaddress1 {{ item.mac_address }}
-    VBoxManage setextradata "{{ item.name }}" "VBoxInternal/Devices/ahci/0/Config/Port0/IsSSD" 1
     VBoxManage modifyvm "{{ item.name }}" --nic1 bridged --bridgeadapter1 {{ item.interface }}
     VBoxManage storagectl "{{ item.name }}" --name "IDE Controller" --add ide
     VBoxManage storageattach "{{ item.name }}" --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "{{ OUT_ISO }}"
-    VBoxManage startvm {{ item.name }} --type headless 
+    VBoxManage startvm "{{ item.name }}" --type headless
   loop: "{{ vms_list }}"
 
 # tasks file for vm-role
