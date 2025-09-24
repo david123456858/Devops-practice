@@ -49,22 +49,31 @@
 #   loop: "{{ vms_list }}"
 
 
-- name: Verificar si la VM existe (de forma segura)
-  shell: |
-    VBoxManage list vms | grep '"{{ item.name }}"' && echo "EXISTE" || echo "NO_EXISTE"
-  loop: "{{ vms_list }}"
-  register: vm_check
-  changed_when: false
+# - name: Verificar si la VM existe (de forma segura)
+#   shell: |
+#     VBoxManage list vms | grep '"{{ item.name }}"' && echo "EXISTE" || echo "NO_EXISTE"
+#   loop: "{{ vms_list }}"
+#   register: vm_check
+#   changed_when: false
 
-- name: Crear VM solo si no existe
+# - name: Crear VM solo si no existe
+#   shell: |
+#     echo "=== CREANDO VM {{ item.item.name }} ==="
+#     VBoxManage createvm --name "{{ item.item.name }}" --ostype Debian_64 --basefolder /vm --register
+#     VBoxManage modifyvm "{{ item.item.name }}" --memory {{ item.item.memory }} --cpus {{ item.item.cpus }}
+#     echo "✅ {{ item.item.name }} creada exitosamente"
+#   loop: "{{ vm_check.results }}"
+#   when: "'NO_EXISTE' in item.stdout"
+#   args:
+#     executable: /bin/bash
+
+- name: Remove all VMs
   shell: |
-    echo "=== CREANDO VM {{ item.item.name }} ==="
-    VBoxManage createvm --name "{{ item.item.name }}" --ostype Debian_64 --basefolder /vm --register
-    VBoxManage modifyvm "{{ item.item.name }}" --memory {{ item.item.memory }} --cpus {{ item.item.cpus }}
-    echo "✅ {{ item.item.name }} creada exitosamente"
-  loop: "{{ vm_check.results }}"
-  when: "'NO_EXISTE' in item.stdout"
-  args:
-    executable: /bin/bash
+    for vm in $(VBoxManage list vms | awk -F\" '{print $2}'); do
+    if VBoxManage showvminfo "$vm" | grep -q "running (since"; then
+    VBoxManage controlvm "$vm" poweroff
+    fi
+    VBoxManage unregistervm "$vm" --delete
+    done
 
 # tasks file for vm-role

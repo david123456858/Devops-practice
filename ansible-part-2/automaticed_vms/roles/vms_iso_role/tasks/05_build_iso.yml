@@ -12,11 +12,3 @@
     /vm/iso/debian-iso-work
   become: yes
 
-# - name: Remove all VMs
-#   shell: |
-#     for vm in $(VBoxManage list vms | awk -F\" '{print $2}'); do
-#     if VBoxManage showvminfo "$vm" | grep -q "running (since"; then
-#     VBoxManage controlvm "$vm" poweroff
-#     fi
-#     VBoxManage unregistervm "$vm" --delete
-#     done
