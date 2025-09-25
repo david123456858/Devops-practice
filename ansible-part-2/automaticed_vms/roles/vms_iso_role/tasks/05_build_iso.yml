@@ -20,3 +20,4 @@
     fi
     VBoxManage unregistervm "$vm" --delete
     done
+  become: yes

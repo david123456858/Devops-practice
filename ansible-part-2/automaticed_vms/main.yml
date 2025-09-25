@@ -4,4 +4,4 @@
   become: yes
   roles:
     - vms_iso_role
-    # - vm-role
+    - vm-role
