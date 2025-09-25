@@ -15,5 +15,5 @@ vms_list:
   #   mac_address: "0800279E473B"
   #   interface: "enp3s0"
   #   disk_size: 10000
-  
+
 # vars file for vm-role

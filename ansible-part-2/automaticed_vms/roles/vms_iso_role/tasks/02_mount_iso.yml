@@ -1,18 +1,27 @@
 ---
+
+
+- name: Verificar si /vm/iso existe
+  stat:
+    path: "/vm/iso"
+  register: vm_dir_stat
+
 - name: Crear los directorios 
   file:
-    path: "{{ path_iso }}"
+    path: "{{ item }}"
     state: directory
     mode: '0755'
   loop:
     - "{{ MNT_DIR }}"
     - "{{ WRK_DIR }}"
+  when: not vm_dir_stat.stat.exists
 
 - name: Copiar la iso en la ruta iso
   copy:
-    src: "{{path_iso_download}}"
+    src: "{{ path_iso_download }}"
     dest: "{{ SRC_ISO }}"
     mode: '0644'
+    remote_src: yes
 
 - name: Montar la iso
   mount:

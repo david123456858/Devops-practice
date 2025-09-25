@@ -1,14 +1,13 @@
 #SPDX-License-Identifier: MIT-0
 ---
-ISO_NAME: debian-13.0.0-amd64-netinst.iso
-path_iso_download: "~/Downloads/{{ ISO_NAME }}"
-path_iso: ~/Documents
+ISO_NAME: debian-13.1.0-amd64-netinst.iso
+path_iso_download: "/home/sysadmin/Downloads/{{ ISO_NAME }}"
+path_iso: /home/sysadmin/Documents
 
 
 SRC_ISO: "/vm/iso/{{ ISO_NAME }}"
-OUT_ISO: "/vm/iso/debian-13.0.0-amd64-netinst-custom.iso"
+OUT_ISO: "/vm/iso/debian-13.1.0-amd64-netinst-custom.iso"
 MNT_DIR: /vm/iso/debian-iso
 WRK_DIR: /vm/iso/debian-iso-work
-NAME_CUSTOM: DEBIAN_CUSTOM
 
 # defaults file for vms_iso_role
