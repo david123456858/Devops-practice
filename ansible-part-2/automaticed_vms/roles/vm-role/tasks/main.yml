@@ -93,7 +93,7 @@
     VBoxManage storageattach "{{ item.name }}" --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "{{ OUT_ISO }}"
         
     # Iniciar VM
-    VBoxManage startvm "{{ item.name }}" --type headless
+    VBoxManage startvm "{{ item.name }}" 
     
     echo "VM {{ item.name }} creada e iniciada exitosamente"
   loop: "{{ vms_list }}"
