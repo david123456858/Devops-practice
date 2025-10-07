@@ -1,0 +1,57 @@
+#SPDX-License-Identifier: MIT-0
+---
+
+
+#SPDX-License-Identifier: MIT-0
+---
+
+- name: Actualizar paquetes en vms_iso_role
+  apt:
+    update_cache: yes
+  become: yes
+
+
+- name: Instalar lo necesario (certificado ssl etc...)
+  apt:
+    state: latest
+    name: 
+      - ca-certificates 
+      - curl
+  become: yes    
+
+- name: Crear directorio para keys APT
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Descargar clave GPG de Docker
+  get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Asegurar permisos de lectura (redundante pero seguro)
+  file:
+    path: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: agregar el repositorio a apt
+  shell: |
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    udo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+- name: Actualizar paquetes en vms_iso_role
+  apt:
+    update_cache: yes
+  become: yes
+ 
+# tasks file for docker
