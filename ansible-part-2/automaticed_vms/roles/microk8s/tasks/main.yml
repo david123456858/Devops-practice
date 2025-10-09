@@ -1,0 +1,17 @@
+#SPDX-License-Identifier: MIT-0
+---
+- name: hostname
+  host: master
+  become: yes 
+  ansible.builtin.hostname:
+        name: "k8s-master"
+
+
+- name: hostname worker
+  host: worker
+  become: yes 
+  ansible.builtin.hostname:
+        name: "k8s-worker"
+
+
+# tasks file for microk8s

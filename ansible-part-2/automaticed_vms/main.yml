@@ -3,5 +3,6 @@
   hosts: host
   become: yes
   roles:
-    - vms_iso_role
-    - vm-role
+    # - vms_iso_role
+    # - vm-role
+    - microk8s
