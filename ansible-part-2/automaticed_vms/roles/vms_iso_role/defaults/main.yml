@@ -2,7 +2,7 @@
 ---
 ISO_NAME: debian-13.1.0-amd64-netinst.iso
 path_iso_download: "/home/sysadmin/Downloads/{{ ISO_NAME }}"
-path_iso: /home/sysadmin/Documents
+path_iso: /home/sysadmin/Downloads
 
 
 SRC_ISO: "/vm/iso/{{ ISO_NAME }}"

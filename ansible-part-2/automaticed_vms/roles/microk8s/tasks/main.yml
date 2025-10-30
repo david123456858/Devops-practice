@@ -1,17 +1,211 @@
-#SPDX-License-Identifier: MIT-0
 ---
-- name: hostname
-  host: master
-  become: yes 
-  ansible.builtin.hostname:
-        name: "k8s-master"
+# ============================================
+# INSTALAR MICROK8S EN EL NODO ACTUAL
+# ============================================
+- name: Instalar snapd (gestor de paquetes snap)
+  apt:
+    name: snapd
+    state: present
+    update_cache: yes
+
+- name: Instalar MicroK8s usando snap
+  community.general.snap:
+    name: microk8s
+    classic: yes
+    channel: 1.28/stable
+
+- name: Esperar a que snap termine de configurar
+  pause:
+    seconds: 10
+
+- name: Verificar que microk8s esté instalado
+  stat:
+    path: /snap/bin/microk8s
+  register: microk8s_binary
+
+- name: Mostrar estado de instalación
+  debug:
+    msg: "MicroK8s instalado: {{ microk8s_binary.stat.exists }}"
+
+- name: Agregar usuario al grupo microk8s
+  user:
+    name: "{{ ansible_user }}"
+    groups: microk8s
+    append: yes
+
+- name: Crear directorio .kube
+  file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Esperar a que MicroK8s esté listo
+  command: /snap/bin/microk8s status --wait-ready
+  changed_when: false
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+
+# ============================================
+# CONFIGURACIÓN ESPECÍFICA DEL MASTER
+# ============================================
+- name: Habilitar DNS addon (solo master)
+  command: /snap/bin/microk8s enable dns  
+  register: dns_result
+  changed_when: "'Addon dns is already enabled' not in dns_result.stdout"
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
 
-- name: hostname worker
-  host: worker
-  become: yes 
-  ansible.builtin.hostname:
-        name: "k8s-worker"
+- name: Habilitar metallb (solo master)
+  command: /snap/bin/microk8s enable metallb:192.168.1.200-192.168.1.210
+  register: metallb_result
+  changed_when: "'Addon metallb is already enabled' not in metallb_result.stdout"
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
+- name: Habilitar storage addon (solo master)
+  command: /snap/bin/microk8s enable storage
+  register: storage_result
+  changed_when: "'Addon storage is already enabled' not in storage_result.stdout"
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
-# tasks file for microk8s
+- name: Generar token de join (solo master)
+  command: /snap/bin/microk8s add-node
+  register: join_token_output
+  changed_when: false
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+
+- name: Extraer comando de join (solo master)
+  set_fact:
+    join_command: "{{ join_token_output.stdout_lines | select('match', '.*microk8s join.*') | first }}"
+  when: "'master' in group_names and join_token_output is defined"
+
+- name: Guardar join_command como variable de grupo
+  set_fact:
+    microk8s_join_command: "{{ join_command }}"
+  delegate_to: localhost
+  delegate_facts: yes
+  when: "'master' in group_names and join_command is defined"
+
+# ============================================
+# CONFIGURACIÓN ESPECÍFICA DEL WORKER
+# ============================================
+- name: Verificar si ya está unido al cluster (solo worker)
+  shell: /snap/bin/microk8s kubectl get nodes 2>&1 || echo "NOT_IN_CLUSTER"
+  register: nodes_check
+  changed_when: false
+  when: "'worker' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+  ignore_errors: yes
+
+- name: DEBUG - Mostrar salida de verificación de nodos
+  debug:
+    msg: 
+      - "Salida completa: {{ nodes_check.stdout }}"
+      - "Hostname del worker: {{ inventory_hostname }}"
+      - "¿Ya está en el cluster?: {{ inventory_hostname in nodes_check.stdout }}"
+  when: "'worker' in group_names"
+
+- name: Regenerar token de join FRESCO desde el master
+  command: /snap/bin/microk8s add-node
+  register: fresh_join_token
+  delegate_to: "{{ groups['master'][0] }}"
+  when: 
+    - "'worker' in group_names"
+    - (nodes_check.stdout == 'NOT_IN_CLUSTER') or ('The connection to the server' in nodes_check.stdout) or (inventory_hostname not in nodes_check.stdout)
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+
+- name: DEBUG - Mostrar token fresco generado
+  debug:
+    msg: "{{ fresh_join_token.stdout_lines }}"
+  when: 
+    - "'worker' in group_names"
+    - fresh_join_token is defined
+
+- name: Extraer comando de join del token fresco
+  set_fact:
+    worker_join_command: "{{ fresh_join_token.stdout_lines | select('match', '.*microk8s join.*--worker.*') | list | first | replace('microk8s', '/snap/bin/microk8s') }}"
+  when: 
+    - "'worker' in group_names"
+    - fresh_join_token is defined
+    - fresh_join_token.stdout_lines | select('match', '.*microk8s join.*--worker.*') | list | length > 0
+
+- name: DEBUG - Mostrar comando de join procesado
+  debug:
+    msg: "Comando a ejecutar: {{ worker_join_command | default('NO DEFINIDO') }}"
+  when: "'worker' in group_names"
+
+- name: Unir worker al cluster
+  shell: "{{ worker_join_command }}"
+  when: 
+    - "'worker' in group_names"
+    - worker_join_command is defined
+  register: join_result
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+  ignore_errors: yes
+
+- name: DEBUG - Mostrar resultado de join
+  debug:
+    msg: 
+      - "Return code: {{ join_result.rc | default('N/A') }}"
+      - "Stdout: {{ join_result.stdout | default('NO OUTPUT') }}"
+      - "Stderr: {{ join_result.stderr | default('NO ERROR') }}"
+  when: 
+    - "'worker' in group_names"
+    - join_result is defined
+
+- name: Mostrar resultado de unión
+  debug:
+    msg: "{{ join_result.stdout }}"
+  when: 
+    - "'worker' in group_names"
+    - join_result is defined 
+    - join_result.stdout is defined
+
+# ============================================
+# VERIFICACIÓN FINAL (solo master)
+# ============================================
+- name: Esperar a que todos los nodos estén listos
+  shell: /snap/bin/microk8s kubectl get nodes
+  register: cluster_nodes
+  until: "'NotReady' not in cluster_nodes.stdout"
+  retries: 10
+  delay: 10
+  changed_when: false
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+
+- name: Mostrar nodos del cluster
+  debug:
+    msg: "{{ cluster_nodes.stdout_lines }}"
+  when: 
+    - "'master' in group_names"
+    - cluster_nodes is defined
+
+- name: Crear alias kubectl para facilitar uso
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: "alias kubectl='microk8s kubectl'"
+    create: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Agregar /snap/bin al PATH permanente
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'export PATH="/snap/bin:$PATH"'
+    create: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
