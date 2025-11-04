@@ -1,7 +1,11 @@
 ---
 # ============================================
 # PLAYBOOK 1: CREAR VMS (localhost)
+<<<<<<< HEAD
 # ============================================
+=======
+# # ============================================
+>>>>>>> f634ebb (update styles)
 - name: Crear infraestructura de VMs
   hosts: host
   become: yes
