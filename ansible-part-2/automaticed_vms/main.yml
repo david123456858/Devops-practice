@@ -1,55 +1,53 @@
 ---
 # ============================================
 # PLAYBOOK 1: CREAR VMS (localhost)
-<<<<<<< HEAD
-# ============================================
-=======
+
 # # ============================================
->>>>>>> f634ebb (update styles)
-- name: Crear infraestructura de VMs
-  hosts: host
-  become: yes
-  roles:
-    - vms_iso_role  # Descomentar para crear ISO personalizada
-    - vm-role       # Descomentar para crear las VMs
+
+# - name: Crear infraestructura de VMs
+#   hosts: host
+#   become: yes
+#   roles:
+#     - vms_iso_role  # Descomentar para crear ISO personalizada
+#     - vm-role       # Descomentar para crear las VMs
 
 # ============================================
 # PLAYBOOK 2: CONFIGURAR /etc/hosts
 # ============================================
-# - name: Configurar /etc/hosts en todos los nodos
-#   hosts: master,worker
-#   become: yes
-#   tasks:
-#     - name: Agregar master a /etc/hosts
-#       lineinfile:
-#         path: /etc/hosts
-#         line: "192.168.1.100 k8s-master"
-#         state: present
+- name: Configurar /etc/hosts en todos los nodos
+  hosts: master,worker
+  become: yes
+  tasks:
+    - name: Agregar master a /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "192.168.1.100 k8s-master"
+        state: present
 
-#     - name: Agregar worker a /etc/hosts
-#       lineinfile:
-#         path: /etc/hosts
-#         line: "192.168.1.101 k8s-worker"
-#         state: present
+    - name: Agregar worker a /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "192.168.1.101 k8s-worker"
+        state: present
 
-#     - name: Configurar hostname propio
-#       ansible.builtin.hostname:
-#         name: "{{ inventory_hostname }}"
+    - name: Configurar hostname propio
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
 
-# # ============================================
-# # PLAYBOOK 3: INSTALAR MICROK8S EN MASTER
-# # ============================================
-# - name: Instalar y configurar MicroK8s en Master
-#   hosts: master
-#   become: yes
-#   roles:
-#     - microk8s
+# ============================================
+# PLAYBOOK 3: INSTALAR MICROK8S EN MASTER
+# ============================================
+- name: Instalar y configurar MicroK8s en Master
+  hosts: master
+  become: yes
+  roles:
+    - microk8s
 
-# # ============================================
-# # PLAYBOOK 4: INSTALAR MICROK8S EN WORKER
-# # ============================================
-# - name: Instalar y configurar MicroK8s en Worker
-#   hosts: worker
-#   become: yes
-#   roles:
-#     - microk8s
+# ============================================
+# PLAYBOOK 4: INSTALAR MICROK8S EN WORKER
+# ============================================
+- name: Instalar y configurar MicroK8s en Worker
+  hosts: worker
+  become: yes
+  roles:
+    - microk8s

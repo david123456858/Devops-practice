@@ -60,7 +60,7 @@
 
 
 - name: Habilitar metallb (solo master)
-  command: /snap/bin/microk8s enable metallb:192.168.1.200-192.168.1.210
+  command: /snap/bin/microk8s enable metallb:192.168.1.18-192.168.1.28
   register: metallb_result
   changed_when: "'Addon metallb is already enabled' not in metallb_result.stdout"
   when: "'master' in group_names"
