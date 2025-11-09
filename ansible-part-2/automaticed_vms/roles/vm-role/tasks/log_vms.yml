@@ -13,3 +13,4 @@
 - name: Mostrar lista final de VMs
   debug:
     msg: "VMs disponibles: {{ final_vm_list.stdout_lines }}"
+

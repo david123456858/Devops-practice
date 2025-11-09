@@ -1,19 +1,22 @@
 ---
 # ============================================
 # PLAYBOOK 1: CREAR VMS (localhost)
-<<<<<<< HEAD
 # ============================================
-=======
-
-# # ============================================
-
->>>>>>> 83ef055b087d9b3501e50b263b703320aadbeae2
 # - name: Crear infraestructura de VMs
 #   hosts: host
 #   become: yes
 #   roles:
 #     - vms_iso_role  # Descomentar para crear ISO personalizada
 #     - vm-role       # Descomentar para crear las VMs
+
+
+- name: configurar hostname
+  hosts: all
+  become: yes
+  tasks:
+    - name: Configurar hostname propio
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
 
 # ============================================
 # PLAYBOOK 2: CONFIGURAR /etc/hosts
@@ -25,26 +28,14 @@
     - name: Agregar master a /etc/hosts
       lineinfile:
         path: /etc/hosts
-<<<<<<< HEAD
-        line: "192.168.1.21 k8s-master"
-=======
-        line: "192.168.1.100 k8s-master"
->>>>>>> 83ef055b087d9b3501e50b263b703320aadbeae2
+        line: "192.168.1.15 k8s-master"
         state: present
 
     - name: Agregar worker a /etc/hosts
       lineinfile:
         path: /etc/hosts
-<<<<<<< HEAD
-        line: "192.168.1.22 k8s-worker"
-=======
-        line: "192.168.1.101 k8s-worker"
->>>>>>> 83ef055b087d9b3501e50b263b703320aadbeae2
+        line: "192.168.1.16 k8s-worker"
         state: present
-
-    - name: Configurar hostname propio
-      ansible.builtin.hostname:
-        name: "{{ inventory_hostname }}"
 
 # ============================================
 # PLAYBOOK 3: INSTALAR MICROK8S EN MASTER
@@ -63,3 +54,13 @@
   become: yes
   roles:
     - microk8s
+
+# ============================================
+# PLAYBOOK 5: INSTALAR DOCKER EN TOOLS
+# ============================================
+
+- name: Instalar Docker en herramienta
+  hosts: tools
+  become: yes
+  roles:
+    - docker

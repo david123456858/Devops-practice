@@ -1,57 +1,45 @@
-#SPDX-License-Identifier: MIT-0
 ---
-
-
-#SPDX-License-Identifier: MIT-0
----
-
-- name: Actualizar paquetes en vms_iso_role
-  apt:
-    update_cache: yes
-  become: yes
-
-
-- name: Instalar lo necesario (certificado ssl etc...)
+- name: install deb packages
   apt:
     state: latest
     name: 
-      - ca-certificates 
       - curl
-  become: yes    
-
-- name: Crear directorio para keys APT
-  file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
-    owner: root
-    group: root
-
-- name: Descargar clave GPG de Docker
-  get_url:
-    url: https://download.docker.com/linux/debian/gpg
-    dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
-    owner: root
-    group: root
-
-- name: Asegurar permisos de lectura (redundante pero seguro)
-  file:
-    path: /etc/apt/keyrings/docker.asc
-    mode: '0644'
-    owner: root
-    group: root
-
-- name: agregar el repositorio a apt
-  shell: |
-    echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    udo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-- name: Actualizar paquetes en vms_iso_role
-  apt:
-    update_cache: yes
+      - ca-certificates
+      - git
+      - python3
+      - python3-pip
+      - python3-venv
+      - python3-pexpect                    
+      - kubernetes-client          
   become: yes
- 
-# tasks file for docker
+
+- name: Add docker 
+  shell: |
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+    echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+          $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    sudo apt update
+  become: yes
+
+- name: Install Docker CE
+  apt:
+    state: latest
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+  become: yes
+
+- name: agregar usuario al usuario de docker
+  user:
+    name: sysadmin
+    groups: docker
+    append: yes
+  become: yes  
