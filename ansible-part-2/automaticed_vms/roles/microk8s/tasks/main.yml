@@ -58,9 +58,8 @@
   environment:
     PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
-
 - name: Habilitar metallb (solo master)
-  command: /snap/bin/microk8s enable metallb:192.168.1.200-192.168.1.210
+  command: /snap/bin/microk8s enable metallb:192.168.1.23-192.168.1.33
   register: metallb_result
   changed_when: "'Addon metallb is already enabled' not in metallb_result.stdout"
   when: "'master' in group_names"
@@ -83,14 +82,32 @@
   environment:
     PATH: "/snap/bin:{{ ansible_env.PATH }}"
 
-- name: Extraer comando de join (solo master)
+- name: DEBUG - Mostrar salida completa del token generado
+  debug:
+    var: join_token_output.stdout_lines
+  when: "'master' in group_names"
+
+- name: Extraer comando de join del token fresco (prioriza --worker)
   set_fact:
-    join_command: "{{ join_token_output.stdout_lines | select('match', '.*microk8s join.*') | first }}"
-  when: "'master' in group_names and join_token_output is defined"
+    worker_join_command: >-
+      {{
+        (fresh_join_token.stdout_lines | select('match', '.*microk8s join.*--worker.*') | list | first(default=''))
+        | default( (fresh_join_token.stdout_lines | select('match', '.*microk8s join.*') | list | first(default='')) )
+        | replace('microk8s', '/snap/bin/microk8s')
+      }}
+  when:
+    - "'workers' in group_names"
+    - fresh_join_token is defined
+
+- name: DEBUG - Contenido de stdout_lines
+  debug:
+    var: join_token_output.stdout_lines
+  when: "'master' in group_names"
 
 - name: Guardar join_command como variable de grupo
   set_fact:
     microk8s_join_command: "{{ join_command }}"
+    microk8s_join_command_worker: "{{ join_command_worker }}"
   delegate_to: localhost
   delegate_facts: yes
   when: "'master' in group_names and join_command is defined"
@@ -98,11 +115,11 @@
 # ============================================
 # CONFIGURACIÓN ESPECÍFICA DEL WORKER
 # ============================================
-- name: Verificar si ya está unido al cluster (solo worker)
+- name: Verificar si ya está unido al cluster (solo workers)
   shell: /snap/bin/microk8s kubectl get nodes 2>&1 || echo "NOT_IN_CLUSTER"
   register: nodes_check
   changed_when: false
-  when: "'worker' in group_names"
+  when: "'workers' in group_names"
   environment:
     PATH: "/snap/bin:{{ ansible_env.PATH }}"
   ignore_errors: yes
@@ -113,14 +130,14 @@
       - "Salida completa: {{ nodes_check.stdout }}"
       - "Hostname del worker: {{ inventory_hostname }}"
       - "¿Ya está en el cluster?: {{ inventory_hostname in nodes_check.stdout }}"
-  when: "'worker' in group_names"
+  when: "'workers' in group_names"
 
 - name: Regenerar token de join FRESCO desde el master
   command: /snap/bin/microk8s add-node
   register: fresh_join_token
   delegate_to: "{{ groups['master'][0] }}"
   when: 
-    - "'worker' in group_names"
+    - "'workers' in group_names"
     - (nodes_check.stdout == 'NOT_IN_CLUSTER') or ('The connection to the server' in nodes_check.stdout) or (inventory_hostname not in nodes_check.stdout)
   environment:
     PATH: "/snap/bin:{{ ansible_env.PATH }}"
@@ -129,26 +146,30 @@
   debug:
     msg: "{{ fresh_join_token.stdout_lines }}"
   when: 
-    - "'worker' in group_names"
+    - "'workers' in group_names"
     - fresh_join_token is defined
 
-- name: Extraer comando de join del token fresco
+- name: Extraer comando de join del token fresco (prioriza --worker)
   set_fact:
-    worker_join_command: "{{ fresh_join_token.stdout_lines | select('match', '.*microk8s join.*--worker.*') | list | first | replace('microk8s', '/snap/bin/microk8s') }}"
+    worker_join_command: >-
+      {{
+        (fresh_join_token.stdout_lines | select('match', '.*microk8s join.*--worker.*') | list | first)
+        | default(fresh_join_token.stdout_lines | select('match', '.*microk8s join.*') | list | first)
+        | replace('microk8s', '/snap/bin/microk8s')
+      }}
   when: 
-    - "'worker' in group_names"
+    - "'workers' in group_names"
     - fresh_join_token is defined
-    - fresh_join_token.stdout_lines | select('match', '.*microk8s join.*--worker.*') | list | length > 0
 
 - name: DEBUG - Mostrar comando de join procesado
   debug:
     msg: "Comando a ejecutar: {{ worker_join_command | default('NO DEFINIDO') }}"
-  when: "'worker' in group_names"
+  when: "'workers' in group_names"
 
 - name: Unir worker al cluster
   shell: "{{ worker_join_command }}"
   when: 
-    - "'worker' in group_names"
+    - "'workers' in group_names"
     - worker_join_command is defined
   register: join_result
   environment:
@@ -162,14 +183,14 @@
       - "Stdout: {{ join_result.stdout | default('NO OUTPUT') }}"
       - "Stderr: {{ join_result.stderr | default('NO ERROR') }}"
   when: 
-    - "'worker' in group_names"
+    - "'workers' in group_names"
     - join_result is defined
 
 - name: Mostrar resultado de unión
   debug:
     msg: "{{ join_result.stdout }}"
   when: 
-    - "'worker' in group_names"
+    - "'workers' in group_names"
     - join_result is defined 
     - join_result.stdout is defined
 

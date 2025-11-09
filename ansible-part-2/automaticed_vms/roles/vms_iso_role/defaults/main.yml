@@ -1,13 +1,8 @@
 #SPDX-License-Identifier: MIT-0
 ---
 ISO_NAME: debian-13.1.0-amd64-netinst.iso
-<<<<<<< HEAD
 path_iso_download: "/home/sysadmin/Downloads/{{ ISO_NAME }}"
 path_iso: /home/sysadmin/Downloads
-=======
-path_iso_download: "/home/sysadmin/Descargas/{{ ISO_NAME }}"
-path_iso: /home/sysadmin/Documentos
->>>>>>> f634ebb (update styles)
 
 
 SRC_ISO: "/vm/iso/{{ ISO_NAME }}"

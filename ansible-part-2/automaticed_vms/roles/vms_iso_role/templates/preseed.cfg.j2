@@ -91,24 +91,13 @@ d-i finish-install/keep-consoles boolean true
 
 # Late command (MEJORADO con logging y validación)
 d-i preseed/late_command string \
-  in-target sh -c 'echo "=== SSH Setup Started ===" > /var/log/preseed-ssh.log' ; \
-  in-target mkdir -p /home/sysadmin/.ssh ; \
-  in-target sh -c 'if [ -f /cdrom/authorized_keys ]; then \
-    echo "authorized_keys encontrado en CD" >> /var/log/preseed-ssh.log ; \
-    cp /cdrom/authorized_keys /home/sysadmin/.ssh/authorized_keys ; \
-    echo "Contenido:" >> /var/log/preseed-ssh.log ; \
-    cat /home/sysadmin/.ssh/authorized_keys >> /var/log/preseed-ssh.log ; \
-  else \
-    echo "ADVERTENCIA: authorized_keys NO encontrado" >> /var/log/preseed-ssh.log ; \
-    touch /home/sysadmin/.ssh/authorized_keys ; \
-  fi' ; \
-  in-target chown -R 1000:1000 /home/sysadmin/.ssh ; \
-  in-target chmod 700 /home/sysadmin/.ssh ; \
-  in-target chmod 600 /home/sysadmin/.ssh/authorized_keys ; \
-  in-target sh -c 'ls -la /home/sysadmin/.ssh/ >> /var/log/preseed-ssh.log' ; \
+  mkdir -p /target/home/sysadmin/.ssh ; \
+  cp /cdrom/authorized_keys /target/home/sysadmin/.ssh/authorized_keys || true ; \
+  chown -R 1000:1000 /target/home/sysadmin/.ssh ; \
+  chmod 700 /target/home/sysadmin/.ssh ; \
+  chmod 600 /target/home/sysadmin/.ssh/authorized_keys || true ; \
   echo 'sysadmin ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/sysadmin ; \
-  chmod 0440 /target/etc/sudoers.d/sysadmin ; \
-  in-target sh -c 'echo "=== SSH Setup Completed ===" >> /var/log/preseed-ssh.log'
+  chmod 0440 /target/etc/sudoers.d/sysadmin ;
 
 # Eject and reboot
 d-i cdrom-detect/eject boolean true

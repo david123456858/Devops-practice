@@ -2,8 +2,8 @@
 # PASO 0: Definir el directorio SSH del usuario real (no root)
 - name: Obtener directorio home del usuario que ejecuta
   set_fact:
-    real_user_home: "{{ lookup('env', 'HOME') }}"
-    real_user: "{{ lookup('env', 'USER') }}"
+    real_user_home: "/home/sysadmin"
+    real_user: "sysadmin"
 
 - name: Debug - información del usuario
   debug:
@@ -14,7 +14,7 @@
 
 # PASO 1: Listar qué hay en .ssh del usuario real
 - name: Listar contenido de .ssh
-  command: ls -la {{ real_user_home }}/.ssh/
+  command: ls -la /home/sysadmin/.ssh/
   register: ssh_dir_content
   ignore_errors: yes
   changed_when: false
