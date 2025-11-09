@@ -1,7 +1,13 @@
 ---
 # ============================================
 # PLAYBOOK 1: CREAR VMS (localhost)
+<<<<<<< HEAD
 # ============================================
+=======
+
+# # ============================================
+
+>>>>>>> 83ef055b087d9b3501e50b263b703320aadbeae2
 # - name: Crear infraestructura de VMs
 #   hosts: host
 #   become: yes
@@ -19,13 +25,21 @@
     - name: Agregar master a /etc/hosts
       lineinfile:
         path: /etc/hosts
+<<<<<<< HEAD
         line: "192.168.1.21 k8s-master"
+=======
+        line: "192.168.1.100 k8s-master"
+>>>>>>> 83ef055b087d9b3501e50b263b703320aadbeae2
         state: present
 
     - name: Agregar worker a /etc/hosts
       lineinfile:
         path: /etc/hosts
+<<<<<<< HEAD
         line: "192.168.1.22 k8s-worker"
+=======
+        line: "192.168.1.101 k8s-worker"
+>>>>>>> 83ef055b087d9b3501e50b263b703320aadbeae2
         state: present
 
     - name: Configurar hostname propio
