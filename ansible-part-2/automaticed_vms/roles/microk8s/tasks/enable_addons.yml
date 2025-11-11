@@ -1,0 +1,30 @@
+- name: Habilitar DNS addon (solo master)
+  command: /snap/bin/microk8s enable dns  
+  register: dns_result
+  changed_when: "'Addon dns is already enabled' not in dns_result.stdout"
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+
+- name: Habilitar metallb (solo master)
+  command: /snap/bin/microk8s enable metallb:192.168.1.23-192.168.1.33
+  register: metallb_result
+  changed_when: "'Addon metallb is already enabled' not in metallb_result.stdout"
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+
+- name: Habilitar storage addon (solo master)
+  command: /snap/bin/microk8s enable storage
+  register: storage_result
+  changed_when: "'Addon storage is already enabled' not in storage_result.stdout"
+  when: "'master' in group_names"
+  environment:
+    PATH: "/snap/bin:{{ ansible_env.PATH }}"
+
+
+
+- name: Habilitar ingress (solo en el controplane)
+  command: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
+  register: ingress_result
+  when: "'master' in group_names"
