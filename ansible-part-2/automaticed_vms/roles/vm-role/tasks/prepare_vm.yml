@@ -70,25 +70,25 @@
       - "VirtualBox ahora puede usar {{ processor | upper }}-V sin conflictos"
 
 
-- name: Verificar si la VM ya existe
-  shell: VBoxManage list vms | grep -q "^\"{{ item.name }}\"" || echo "VM_NOT_EXISTS"
-  register: vm_exists_check
-  loop: "{{ vms_list }}"
-  failed_when: false
-  changed_when: false
+# - name: Verificar si la VM ya existe
+#   shell: VBoxManage list vms | grep -q "^\"{{ item.name }}\"" || echo "VM_NOT_EXISTS"
+#   register: vm_exists_check
+#   loop: "{{ vms_list }}"
+#   failed_when: false
+#   changed_when: false
 
-- name: Verificar si el directorio de la VM ya existe
-  stat:
-    path: "/vm/{{ item.name_total }}"
-  register: vm_dir_exists
-  loop: "{{ vms_list }}"
+# - name: Verificar si el directorio de la VM ya existe
+#   stat:
+#     path: "/vm/{{ item.name_total }}"
+#   register: vm_dir_exists
+#   loop: "{{ vms_list }}"
 
-- name: Limpiar directorio de VM existente si la VM no está registrada
-  file:
-    path: "/vm/{{ item.item.name_total }}"
-    state: absent
-  loop: "{{ vm_dir_exists.results }}"
-  when: 
-    - item.stat.exists
-    - vm_exists_check.results[ansible_loop.index0].stdout == "VM_NOT_EXISTS"
-  become: yes
+# - name: Limpiar directorio de VM existente si la VM no está registrada
+#   file:
+#     path: "/vm/{{ item.item.name_total }}"
+#     state: absent
+#   loop: "{{ vm_dir_exists.results }}"
+#   when: 
+#     - item.stat.exists
+#     - vm_exists_check.results[ansible_loop.index0].stdout == "VM_NOT_EXISTS"
+#   become: yes

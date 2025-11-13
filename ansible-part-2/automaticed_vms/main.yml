@@ -11,7 +11,7 @@
 
 
 - name: configurar hostname
-  hosts: all
+  hosts: master,worker
   become: yes
   tasks:
     - name: Configurar hostname propio
@@ -64,3 +64,13 @@
   become: yes
   roles:
     - docker
+
+# ============================================
+# PLAYBOOK 5: INSTALAR VAULT EN TOOLS
+# ============================================
+
+- name: Instalar VAULT en tools
+  hosts: tools
+  become: yes
+  roles:
+    - vault

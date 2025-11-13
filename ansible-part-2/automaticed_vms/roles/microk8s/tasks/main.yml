@@ -53,14 +53,14 @@
 
 - import_tasks: enable_addons.yml
 
-- name: Agregar vault conexion
-  shell: |
-    microk8s helm3 repo add hashicorp https://helm.releases.hashicorp.com
-    microk8s helm3 repo update
-    microk8s helm3 install vault hashicorp/vault \
-    -set "injector.externalVaultAddr=http://IP-DE-TU-VM-VAULT:8200" \
-    --set "server.enabled=false"
-  when: "'master' in group_names"
+# - name: Agregar vault conexion
+#   shell: |
+#     microk8s helm3 repo add hashicorp https://helm.releases.hashicorp.com
+#     microk8s helm3 repo update
+#     microk8s helm3 install vault hashicorp/vault \
+#     -set "injector.externalVaultAddr=http://IP-DE-TU-VM-VAULT:8200" \
+#     --set "server.enabled=false"
+#   when: "'master' in group_names"
 
 - name: Generar token de join (solo master)
   command: /snap/bin/microk8s add-node
